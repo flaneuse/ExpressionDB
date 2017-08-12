@@ -19,5 +19,5 @@ for(file in ont_files) {
     # separate(Gene.description, into = c('gene_description', 'source'), sep = ' \\[') %>% 
     select(gene_id_go = Symbol, gene_description = description, geneLink, GO)
   
-  write.csv(ont, paste0('data/annot_expdb_', species, '2017-08.csv')) 
+  write.csv(ont, paste0('data/annot_expdb_', species, '2017-08.csv'), row.names = FALSE) 
 }
