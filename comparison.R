@@ -36,6 +36,8 @@ output$compPlot = renderPlot({
     
     # filter data
     filteredData = filterData()
+    incProgress(amount = 0.5)
+    
     
     # switching between volcano and plot causes a bit of mixing b/w filterData and the plotting
     # filtering happens quicker than plotting, so it gets confused and gives a temp warning/error
