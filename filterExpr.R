@@ -8,6 +8,7 @@ filterData <- reactive({
     populateSelectize()
     populateSelectize2()
     
+    incProgress(amount = 0.25)
     
     # Gene and muscle filtering -----------------------------------------------
     
@@ -246,6 +247,7 @@ filterData <- reactive({
       }
     }
     
+  
     return(filtered)
 
   })
