@@ -24,17 +24,17 @@
 # specify the path to your custom .csv data frame. 'sample_data.csv' 
 # is an example data frame with sample data and all of the required fields.
 
-data_file = 'rat_sample.csv'
-go_file = 'annot_expdb_rat2017-08.csv'
+data_file = 'expr_rat_20170705.csv'
+go_file = 'annot_expdb_ratV4.csv'
 
 data_dir = 'data/' # location where the data are stored
 
 # column name w/i `data_file` to ID unique observations (typically a gene name/id, or transcript name/id)
-data_unique_id = 'Transcript' # !! MUST CONTAIN UNIQUE VALUES
+data_unique_id = 'transcript' # !! MUST CONTAIN UNIQUE VALUES
 
 # column names to use to merge the expression data to the ontology.
 # Can be the same column as data_unique_id
-data_merge_id = 'Transcript' # column within `data_file` to link to `go_file`
+data_merge_id = 'gene_id_go' # column within `data_file` to link to `go_file`
 go_merge_id = 'gene_id_go' # column within `go_file` to link to `data_file`
 
 # column within `go_file` that contains gene descriptions
