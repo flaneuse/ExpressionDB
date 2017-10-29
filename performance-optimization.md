@@ -96,4 +96,44 @@ filter_expr = function(filtered) {
 
 ... but there's still > 31k genes to filter.  The actual application of the filter (```df %>% filter_(filter_arg)```) is where it fails.
 
-But there's no reason why it needs to be applied.
+But there's no reason why it needs to be applied, if no real filtering is happening. As a sidenote, this two-stage filtering is necessary because we want to include all data from a gene that has ANY expression within the limits. So, for a hypothetical geneX, it might have EDL expression of 0, eye of 10, and left ventricle of 1000.  If we set the expression to be RPKM between 10-100, we would have a holey plot, where the EDL and LV data are missing. Not ideal.
+
+#### The first fix:
+Okay, write an ```if``` statement that checks if filtering needs to happen. If not, move on. This solves the problem... however, if you have a narrow filter applied, you run into the same problem.
+
+On my machine (R version 3.4.1 (2017-06-30)
+Rstudio: 1.1.383
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+3.5 GHz Intel Core i7
+16 GB 2133 MHz LPDDR3), the filter seemed to break around > 20389 transcripts. For rat expression dataset, > 0.5 RPKM okay; > 0.4 bad.
+
+#### The more general fix:
+Resort to base R for the filtering.
+
+```
+      if(length(filteredDF) != nTranscripts) {
+        
+        # Pulling out the base R....
+        df = df[df$transcript %in% filteredDF,]
+      }
+```    
+
+### Fixing ```comparison.R```
+There's also some instability/slowness from comparison.R. It appears that's in part from the double filtering that happens:
+```
+        filtered = filtered %>% 
+          filter_gene(filteredTranscripts) %>% 
+          filter_gene(filteredFC)
+          ```
+
+```filteredFC``` also needs a check for uniqueness:
+        ```
+        filteredFC = left_join(filtered, relExpr,         # Safer way: doing a many-to-one merge in:
+                               by = setNames(data_unique_id, data_unique_id)) %>% 
+          mutate(`fold change`= expr/relExpr) %>%         # calc fold change
+          filter(`fold change` >= input$foldChange) %>%       # filter FC
+          pull(data_unique_id) %>% 
+          unique()
+          ```
+        
