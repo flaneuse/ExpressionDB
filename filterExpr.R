@@ -8,7 +8,7 @@ filterData <- reactive({
     populateSelectize()
     populateSelectize2()
     
-    incProgress(amount = 0.25)
+    incProgress(amount = 0.05)
     
     # Gene and muscle filtering -----------------------------------------------
     
@@ -20,6 +20,7 @@ filterData <- reactive({
     first_char = str_sub(input$geneInput, 1, 1)
     last_char = str_sub(input$geneInput, -1, -1)
     
+    incProgress(amount = 0.05)
     
     if(str_detect(input$geneInput,  '“?\\"') | str_detect(input$geneInput,  '"?\\"')){
       # If exact matching is turned on, there are 3 potential search matches: 
@@ -55,6 +56,7 @@ filterData <- reactive({
       geneInput3 = NA
     }
     
+    incProgress(amount = 0.05)
     
     if(is.null(input$GO)){
       ont = ""
@@ -62,6 +64,7 @@ filterData <- reactive({
       ont = input$GO
     }
     
+    incProgress(amount = 0.05)
     
     # For fold change, adding in the FC-selected muscle if it's not already in the list
     if(input$tabs == 'volcano') {# volcano plot     
@@ -76,6 +79,7 @@ filterData <- reactive({
     
     qCol = paste0(paste0(sort(selMuscles), collapse = '.'), '_q')
     
+    incProgress(amount = 0.05)
     
     
     # SELECT DATA.
@@ -126,9 +130,19 @@ filterData <- reactive({
     
     
     filter_gene = function(df, filteredDF) {
-      filter_arg = paste0(data_unique_id, " %in% list('",  paste(filteredDF, collapse = "','"), "')")
       
-      df %>% filter_(filter_arg)
+      nTranscripts = df %>% distinct_(data_unique_id) %>% count()
+      
+      
+      # Check if need to filter at all
+      if(length(filteredDF) != nTranscripts) {
+        
+        # Pulling out the base R....
+        df = df[df$transcript %in% filteredDF,]
+      }
+      
+      
+      return(df)
     }
     
     
@@ -136,8 +150,8 @@ filterData <- reactive({
       filtered %>%
         filter(expr <= input$maxExprVal,
                expr >= input$minExprVal) %>% 
-        pull(data_unique_id)
-      
+        pull(data_unique_id) %>% 
+        unique()
     }
     
     
@@ -146,11 +160,14 @@ filterData <- reactive({
       filtered = data %>% 
         basic_filter(qCol, selMuscles, data_unique_id, geneInput1, geneInput2, geneInput3, ont_var, ont)
       
+      incProgress(amount = 0.25)
       
     }  else if (input$adv == FALSE) {
       filtered = data %>% 
         basic_filter(qCol, selMuscles, data_unique_id, geneInput1, geneInput2, geneInput3, ont_var, ont) %>%     
         mutate(q = NA)
+      
+      incProgress(amount = 0.25)
       
     } else if(qCol %in% colnames(data)){
       # Check if the q values exist in the db.
@@ -158,11 +175,15 @@ filterData <- reactive({
         basic_filter(qCol, selMuscles, data_unique_id, geneInput1, geneInput2, geneInput3, ont_var, ont) %>% 
         filter(q < input$qVal)
       
+
+      incProgress(amount = 0.5)
       
     } else {
       filtered = data %>% 
         basic_filter(qCol, selMuscles, data_unique_id, geneInput1, geneInput2, geneInput3, ont_var, ont) %>% 
         mutate(q = NA)
+      
+      incProgress(amount = 0.5)
     }
     
     
@@ -229,7 +250,8 @@ filterData <- reactive({
                                by = setNames(data_unique_id, data_unique_id)) %>% 
           mutate(`fold change`= expr/relExpr) %>%         # calc fold change
           filter(`fold change` >= input$foldChange) %>%       # filter FC
-          pull(data_unique_id)
+          pull(data_unique_id) %>% 
+          unique()
         
         # Select the transcripts where at least one tissue meets the conditions.
         filtered = filtered %>% 
@@ -241,9 +263,9 @@ filterData <- reactive({
         filteredTranscripts = filter_expr(filtered)
         
         # Select the transcripts where at least one tissue meets the conditions.
-        filtered = filtered %>% 
+        filtered = filtered %>%
           filter_gene(filteredTranscripts)
-        
+
       }
     }
     
