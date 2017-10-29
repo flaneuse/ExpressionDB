@@ -136,4 +136,11 @@ There's also some instability/slowness from comparison.R. It appears that's in p
           pull(data_unique_id) %>% 
           unique()
           ```
+          
+Now the filtering part seems okay. The manipulations within ```comparison.R``` seem to bog down. Placing breakpoints IDs the rate limiting step as the correlation calculation:
         
+        ``` correl = data.frame(cor(pairwise)) %>%
+          select(corr = refExpr)
+          ```
+
+Unfortunately, that requires re-writing the ```cor``` function, which some people have done in Fortran, but pkg. comes with lots of dependencies.

@@ -36,7 +36,8 @@ output$compPlot = renderPlot({
     
     # filter data
     filteredData = filterData()
-    incProgress(amount = 0.5)
+    
+    incProgress(0.21)
     
     
     # switching between volcano and plot causes a bit of mixing b/w filterData and the plotting
@@ -64,15 +65,23 @@ output$compPlot = renderPlot({
         
         # Calculate correlation coefficient ---------------------------------------
         
+        incProgress(0.17)
         # Splay outward
         pairwise = filteredData %>% 
           select_(data_unique_id, 'tissue', 'expr', 'refExpr') %>% 
           spread_(data_unique_id, 'expr') %>%
           select(-tissue)
         
+        
+        incProgress(0.15)
         # Calculate correlation
-        correl = data.frame(cor(pairwise)) %>%
+        correl = cor(pairwise)
+        
+        correl = data.frame(correl) %>%
           select(corr = refExpr)
+        
+        
+        incProgress(0.5)
         
         correl = correl %>%
           mutate(corr_name = row.names(correl))
@@ -101,7 +110,6 @@ output$compPlot = renderPlot({
           orderNames = sort(unique(filteredData[[data_unique_id]]))
         }
         
-        
         filteredData[[data_unique_id]] = factor(filteredData[[data_unique_id]], orderNames)
         
         
@@ -116,7 +124,6 @@ output$compPlot = renderPlot({
         numTissues = length(unique(filteredData$tissue))
         
         textSize = ifelse(numTissues <= 8, 16, 20 - numTissues/2)
-        
         
         ggplot(filteredData,
                aes(x = logFC, xend = 0, y = tissue, yend = tissue,
