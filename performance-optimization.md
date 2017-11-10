@@ -183,3 +183,10 @@ Unfortunately, that requires re-writing the ```cor``` function, which some peopl
 * Quite slow
 * Googling shows that [grouped datasets in dplyr are slow](https://github.com/tidyverse/dplyr/issues/1663) to manipulate
 * Ungrouping objects --> performance improvement.
+
+
+### To read later
+* http://adv-r.had.co.nz/memory.html
+* https://shiny.rstudio.com/articles/persistent-data-storage.html
+* https://shiny.rstudio.com/articles/scaling-and-tuning.html
+* 
