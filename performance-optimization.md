@@ -144,3 +144,42 @@ Now the filtering part seems okay. The manipulations within ```comparison.R``` s
           ```
 
 Unfortunately, that requires re-writing the ```cor``` function, which some people have done in Fortran, but pkg. comes with lots of dependencies.
+
+
+## Peformance Issues, part 2: rat muscleDB, with a **much** smaller dataset than mouse, is **much** slower, with similar code.
+
+### Initial tests:
+* See performance issues on Laura's Mac, Scott's Linux box, and Shiny server deployment.
+* Double checking comparison b/w mouse and rat code. Nothing clearly different:
+  * _site directory removed
+  * ```comparison.R``` calls dplyr::pull to re-order the factor levels
+  * **```filterExpr.R``` fundamentally unchanged (just changed names of tissues)
+  * extra files deleted.
+* Ran [```profvis```](https://rstudio.github.io/profvis/) on ```runApp```
+  * As expected, filtering is the most memory intensive. Rate limiting step is:
+  ```
+      filtered = data2filter %>% 
+      select_("-dplyr::contains('_q')", q = qCol) %>% 
+      filter(tissue %in% selMuscles,   # muscles
+             grepl(eval(geneInput), shortName, ignore.case = TRUE),
+             GO %like% ont)
+             ```
+  * requires 152 MB memory. Seems whack, since the rat-expr.rds is 3.6 MB and rat-ontology.rds is 49 KB.
+
+* Created a dummy dataset with only 2 samples (8 total rows), and reran profvis.
+  * In that case, output$plot1 used 4 MB, though the data file is < 1 KB.  All rate limiting steps are the ggplot calls, which makes sense.
+  * Interestingly, all the other functions are called, even though they're not used-- must be being called from ```server.R```.  Need to build in a check to only run if they're on the correct tab?
+  * Otherwise, nothing much useful.
+  
+
+### Baseline profvis stats:
+* rat data w/ no filtering.
+* filterData() call = 186.3 MB deallocated, 162.7 MB allocated, 17.51 s
+* data2Plot filtering (to get single page view) similarly clunky; 87.6 MB deallocated, 87.5 MB allocated, 2.04 s.
+* though other functions are called, they each take 10-20 ms and ~ 0.4 MB
+  
+### Key insight
+* test a basic dplyr call using profvis outside Shiny environment
+* Quite slow
+* Googling shows that [grouped datasets in dplyr are slow](https://github.com/tidyverse/dplyr/issues/1663) to manipulate
+* Ungrouping objects --> performance improvement.
